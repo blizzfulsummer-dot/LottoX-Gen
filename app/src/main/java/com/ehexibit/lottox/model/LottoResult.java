@@ -1,88 +1,68 @@
 package com.ehexibit.lottox.model;
 
-public class LottoResult{
-	static int NUMBER=0;
-	private int ID[];
-	private LottoNumber[] numbers;
-	private String res;
-	
-	String date;
-	
-	public LottoResult(LottoNumber[] numbers){
-	 this.numbers = numbers;
-	 res = "";
-	 ID = new int[numbers.length];
-	 for(int i=0; i<numbers.length; i++){
-		 res += ""+numbers[i].getValue()+" ";
-		 ID[i]=numbers[i].getID();
+import java.util.*;
+import java.util.stream.Collectors;
 
-		 
-	 }
-	 
-	 setBestPair();
-	 NUMBER++;
-	 
-	}
-	public void setBestPair(){
-		for(int i=0; i<numbers.length; i++){
-	
-		   	   for(int j=0; j<numbers.length; j++){
-		   	   	
-	/* If statement prevent setting obj a to itself So if Obj (a) is not Obj (a) then setBest pair */	      
-	       	if(i!=j)
-		   	numbers[i].setBestPairIDs(numbers[j]);
-		   }
-		}
-	}
-	//Date to be implement later
-	public void setDate(String date){
-		this.date = date;
-	}	
-	public int[] getIDs(){
-		return ID;
-	}
-	public String getDate(){
-		return date;
-	}
-	public boolean contains(LottoNumber a){
-		
-		for(int n:ID){
-			if(n==a.getID()) return true;
-		}
-		return false;
-	}
-	
-	public boolean contains(LottoNumber a,LottoNumber b){
-		
-		for(int i=0; i<numbers.length; i++){
-			for(int j=i+1; j<numbers.length; j++){
-		 		if(ID[i]==a.getID()&&ID[j]==b.getID()
-		 	  	||ID[j]==a.getID()&&ID[i]==b.getID())return true;
-			}
-		}
-		return false;
-	}
-	
-	public boolean contains(LottoNumber a, LottoNumber b, LottoNumber c){
-		if(contains(a)&&contains(b,c))
-						return true;
-		return false;
-	}
-	
-	public boolean contains(LottoNumber a, LottoNumber b, LottoNumber c, LottoNumber d){
-		if(contains(a,b)&&contains(c,d))
-						return true;
-		return false;
-	}
-	public void printResult(){
-		for(int a:ID)
-		System.out.print(a<10?"0"+a+" ":a+" ");
-		System.out.println();
-	}
+public class LottoResult {
+    static int NUMBER = 0;
 
-	public String toString(){
-		
-		return res;
-	}
+    private final List<Integer> IDs;          // Store LottoNumber IDs
+    private final LottoNumber[] numbers;      // Original LottoNumbers
+    private final String res;                 // String representation
+    private String date;
 
+    public LottoResult(LottoNumber[] numbers) {
+        this.numbers = numbers;
+        this.IDs = Arrays.stream(numbers)
+                         .map(LottoNumber::getID)
+                         .collect(Collectors.toList());
+
+        // Build string representation
+        this.res = Arrays.stream(numbers)
+                         .map(n -> String.valueOf(n.getValue()))
+                         .collect(Collectors.joining(" "));
+
+        setBestPair();
+        NUMBER++;
+    }
+
+    private void setBestPair() {
+        for (int i = 0; i < numbers.length; i++) {
+            for (int j = 0; j < numbers.length; j++) {
+                if (i != j) {
+                    numbers[i].setBestPairIDs(numbers[j]);
+                }
+            }
+        }
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public List<Integer> getIDs() {
+        return IDs;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    // ✅ Generic containsAll for any number of LottoNumbers
+    public boolean containsAll(LottoNumber... nums) {
+        List<Integer> check = Arrays.stream(nums)
+                                    .map(LottoNumber::getID)
+                                    .toList();
+        return IDs.containsAll(check);
+    }
+
+    public void printResult() {
+        IDs.forEach(id -> System.out.print(id < 10 ? "0" + id + " " : id + " "));
+        System.out.println();
+    }
+
+    @Override
+    public String toString() {
+        return res;
+    }
 }
