@@ -23,17 +23,16 @@ public class LottoResult{
 	 NUMBER++;
 	 
 	}
-	public void setBestPair(){
-		for(int i=0; i<numbers.length; i++){
-	
-		   	   for(int j=0; j<numbers.length; j++){
-		   	   	
-	/* If statement prevent setting obj a to itself So if Obj (a) is not Obj (a) then setBest pair */	      
-	       	if(i!=j)
-		   	numbers[i].setBestPairIDs(numbers[j]);
-		   }
-		}
+	public void setBestPair() {
+    	for (int i = 0; i < numbers.length; i++) {
+        	for (int j = i + 1; j < numbers.length; j++) {
+            	// set both ways at the same time
+            	numbers[i].setBestPairIDs(numbers[j]);
+            	numbers[j].setBestPairIDs(numbers[i]);
+        	}
+    	}
 	}
+
 	//Date to be implement later
 	public void setDate(String date){
 		this.date = date;
