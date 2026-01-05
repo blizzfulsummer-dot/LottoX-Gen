@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎲 Lotto Suggestion</title>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* Match your number balls style */
+.number-ball {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #e74c3c;
+    color: white;
+    font-weight: bold;
+    font-size: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Optional: Focus style for Bootstrap selects */
+.form-select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+}
+</style>
+</head>
+<body class="bg-light text-dark">
+
+<div class="container py-5">
+    <h1 class="text-center mb-5 fw-bold text-primary">🎲 Lotto Suggestion</h1>
+
+    <!-- Variant Selection -->
+    <div class="mb-3">
+        <label for="variant" class="form-label fw-semibold">Select Variant:</label>
+        <select id="variant" class="form-select">
+            <option value="6_42">6/42</option>
+            <option value="6_45">6/45</option>
+            <option value="6_49">6/49</option>
+            <option value="6_55">6/55</option>
+            <option value="6_58">6/58</option>
+        </select>
+    </div>
+
+    <!-- Model Type Selection -->
+    <div class="mb-3">
+        <label for="modelType" class="form-label fw-semibold">Select Model:</label>
+        <select id="modelType" class="form-select">
+            <option value="">ODE</option>
+            <option value="_hybrid">Hybrid</option>
+        </select>
+    </div>
+
+    <!-- Mode Selection -->
+    <div class="mb-4">
+        <label for="mode" class="form-label fw-semibold">Select Mode:</label>
+        <select id="mode" class="form-select">
+            <option value="deterministic">Deterministic</option>
+            <option value="balance" selected>Balanced</option>
+            <option value="guided-random">Guided Random</option>
+        </select>
+    </div>
+
+    <!-- Submit Button -->
+    <button onclick="getSuggestion()" class="btn btn-primary w-100 mb-4 fw-bold">Get Suggestion</button>
+
+    <!-- Results -->
+    <div id="result" class="bg-white p-4 rounded shadow">
+        <div id="numbers" class="d-flex flex-wrap justify-content-center gap-2 mb-4"></div>
+        <canvas id="probChart" height="200"></canvas>
+    </div>
+
+    <!-- Messages -->
+    <div id="message" class="text-center fw-bold text-warning mt-3" style="display:none;"></div>
+    <div id="error" class="text-center fw-bold text-danger mt-3" style="display:none;"></div>
+</div>
+
+<script>
+let chart = null;
+
+window.addEventListener("DOMContentLoaded", () => {
+    const ctx = document.getElementById('probChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ["?", "?", "?", "?", "?", "?"],
+            datasets: [{
+                label: 'Waiting for prediction...',
+                data: [0, 0, 0, 0, 0, 0],
+                backgroundColor: 'rgba(200,200,200,0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, max: 100 }
+            }
+        }
+    });
+});
+
+
+function createPlaceholderBalls() {
+    const numbersDiv = document.getElementById('numbers');
+    numbersDiv.innerHTML = '';
+    for (let i = 0; i < 6; i++) {
+        const ball = document.createElement('div');
+        ball.className = 'number-ball';
+        ball.textContent = '?';
+        ball.style.backgroundColor = '#95a5a6'; // gray placeholder color
+        numbersDiv.appendChild(ball);
+    }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    // Add placeholder balls
+    createPlaceholderBalls();
+
+    // Add placeholder chart
+    const ctx = document.getElementById('probChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ["?", "?", "?", "?", "?", "?"],
+            datasets: [{
+                label: 'Waiting for prediction...',
+                data: [0, 0, 0, 0, 0, 0],
+                backgroundColor: 'rgba(200,200,200,0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, max: 100 }
+            }
+        }
+    });
+});
+
+
+function createNumberBall(number) {
+    const ball = document.createElement('div');
+    ball.className = 'number-ball';
+    ball.textContent = number;
+    return ball;
+}
+
+async function getSuggestion() {
+    const variant = document.getElementById('variant').value;
+    const modelType = document.getElementById('modelType').value;
+    const mode = document.getElementById('mode').value;
+    const fullVariant = variant + modelType;
+
+    const resultDiv = document.getElementById('result');
+    const numbersDiv = document.getElementById('numbers');
+    const messageDiv = document.getElementById('message');
+    const errorDiv = document.getElementById('error');
+
+    resultDiv.style.display = 'none';
+    messageDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+    numbersDiv.innerHTML = '';
+
+    try {
+        const response = await fetch(`/suggest/${fullVariant}/${mode}`, { method: 'POST' });
+        const data = await response.json();
+
+        if (data.status === "retry") {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = data.message;
+            return;
+        }
+        if (data.error) {
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = data.error;
+            return;
+        }
+
+        // Display numbers as balls
+        resultDiv.style.display = 'block';
+        data.suggested.forEach(num => numbersDiv.appendChild(createNumberBall(num)));
+
+        // Draw probabilities chart
+        const ctx = document.getElementById('probChart').getContext('2d');
+        const labels = data.probabilities.map((_, i) => i + 1);
+        const probabilities = data.probabilities.map(p => (p*100).toFixed(2));
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Probability (%)',
+                    data: probabilities,
+                    backgroundColor: labels.map(n => data.suggested.includes(n) ? '#e74c3c' : '#3498db')
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: Math.max(...probabilities)*1.2 }
+                }
+            }
+        });
+
+    } catch (err) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = 'Failed to fetch suggestion. Is the API running?';
+    }
+}
+
+</script>
+
+<!-- Bootstrap JS (optional if you want dropdown animations) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

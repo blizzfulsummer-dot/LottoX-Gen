@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotto Suggestion</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background-color: #f4f6f8;
+        color: #333;
+    }
+    h1 { text-align: center; color: #2c3e50; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    select, button { padding: 10px; font-size: 16px; width: 100%; max-width: 300px; }
+    button { cursor: pointer; background-color: #3498db; color: white; border: none; border-radius: 5px; margin-top: 10px; }
+    button:hover { background-color: #2980b9; }
+    .result { margin-top: 30px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);}
+    .numbers { font-size: 28px; font-weight: bold; color: #e74c3c; margin-bottom: 15px; text-align: center; }
+    .error, .message { font-size: 16px; font-weight: bold; text-align: center; margin-top: 20px; }
+    .error { color: #e74c3c; }
+    .message { color: #f39c12; }
+</style>
+</head>
+<body>
+
+<h1>Lotto Suggestion</h1>
+
+<div class="form-group">
+    <label for="variant">Select Variant:</label>
+    <select id="variant">
+        <option value="6_42">6/42</option>
+        <option value="6_45">6/45</option>
+        <option value="6_49">6/49</option>
+        <option value="6_55">6/55</option>
+        <option value="6_58">6/58</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="modelType">Select Model:</label>
+    <select id="modelType">
+        <option value="">ODE</option>
+        <option value="_hybrid">Hybrid</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="mode">Select Mode:</label>
+    <select id="mode">
+        <option value="deterministic">Deterministic</option>
+        <option value="balance" selected>Balanced</option>
+        <option value="guided-random">Guided Random</option>
+    </select>
+</div>
+
+<button onclick="getSuggestion()">Get Suggestion</button>
+
+<div class="result" id="result" style="display:none;">
+    <div class="numbers" id="numbers"></div>
+    <canvas id="probChart" height="200"></canvas>
+</div>
+
+<div class="message" id="message" style="display:none;"></div>
+<div class="error" id="error" style="display:none;"></div>
+
+<script>
+let chart = null;
+
+async function getSuggestion() {
+    const variant = document.getElementById('variant').value;
+    const modelType = document.getElementById('modelType').value;
+    const mode = document.getElementById('mode').value;
+
+    const fullVariant = variant + modelType; // e.g., "6_45_hybrid" or "6_45"
+
+    const resultDiv = document.getElementById('result');
+    const numbersDiv = document.getElementById('numbers');
+    const messageDiv = document.getElementById('message');
+    const errorDiv = document.getElementById('error');
+
+    resultDiv.style.display = 'none';
+    messageDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+
+    try {
+        const response = await fetch(`/suggest/${fullVariant}/${mode}`, {
+            method: 'POST',
+        });
+
+        const data = await response.json();
+
+        if (data.status === "retry") {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = data.message;
+            return;
+        }
+        if (data.status === "error") {
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = data.message;
+            return;
+        }
+
+        // Show suggested numbers
+        resultDiv.style.display = 'block';
+        numbersDiv.textContent = data.suggested.join(', ');
+
+        // Draw probabilities chart
+        const ctx = document.getElementById('probChart').getContext('2d');
+
+        const labels = data.probabilities.map((_, i) => i + 1);
+        const probabilities = data.probabilities.map(p => (p*100).toFixed(2));
+
+        if (chart) chart.destroy(); // destroy old chart if exists
+
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Probability (%)',
+                    data: probabilities,
+                    backgroundColor: labels.map(n => data.suggested.includes(n) ? '#e74c3c' : '#3498db')
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...probabilities)*1.2
+                    }
+                }
+            }
+        });
+
+    } catch (err) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = 'Failed to fetch suggestion. Is the API running?';
+    }
+}
+</script>
+
+</body>
+</html>
