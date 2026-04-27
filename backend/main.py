@@ -9,6 +9,7 @@ from models.lotto_hybrid_model import LottoHybridModel
 from utils.helpers import prepare_dataset
 from utils.bayesian_layer import bayesian_smooth
 from utils.bayesian_memory import BayesianMemory
+from typing import Union
 
 app = FastAPI()
 
@@ -187,8 +188,11 @@ def suggest(variant: str, mode: str = "balance"):
 
 
 @app.post("/update/{variant}")
-def update_history(variant: str, draw: list[int]):
-    """API endpoint to update Bayesian memory and lotto history."""
+def update_history(variant: str, draws: Union[list[int], list[list[int]]]):
+    """API endpoint to update Bayesian memory and lotto history.
+    
+    Accepts either a single draw [1,2,3,4,5,6] or multiple draws [[1,2,3,4,5,6], [7,8,9,10,11,12]]
+    """
     data_file = Path("data") / f"lotto_history_{variant}.json"
     if not data_file.exists():
         return {"error": f"No history found for {variant}"}
@@ -196,11 +200,27 @@ def update_history(variant: str, draw: list[int]):
     with open(data_file, "r") as f:
         history = json.load(f)
 
-    history.append(draw)
+    memory = BayesianMemory(variant)
+
+    # Check if single draw or multiple draws
+    if isinstance(draws[0], list):
+        # Multiple draws: list of lists
+        for draw in draws:
+            history.append(draw)
+            memory.update(draw)
+        num_draws = len(draws)
+    else:
+        # Single draw: list of ints
+        history.append(draws)
+        memory.update(draws)
+        num_draws = 1
+
     with open(data_file, "w") as f:
         json.dump(history, f, indent=2)
 
-    memory = BayesianMemory(variant)
-    memory.update(draw)
+    return {"status": "ok", "message": f"Updated with {num_draws} draw(s). History and Bayesian memory updated"}
 
-    return {"status": "ok", "message": "History and Bayesian memory updated"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
