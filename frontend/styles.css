@@ -1,0 +1,248 @@
+/* Lotto AI-X Gen Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+:root {
+    --bg-color: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    --text-color: #212529;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --border-color: #dee2e6;
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --gold-gradient: linear-gradient(45deg, #f1c40f, #f39c12);
+    --blue-gradient: linear-gradient(45deg, #3498db, #2980b9);
+    --header-gradient: linear-gradient(135deg, #0d6efd, #74b9ff);
+}
+
+[data-theme="dark"] {
+    --bg-color: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+    --text-color: #e0e0e0;
+    --card-bg: #2a2a2a;
+    --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --border-color: #404040;
+    --primary-color: #4a90e2;
+    --secondary-color: #b0b0b0;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --gold-gradient: linear-gradient(45deg, #f1c40f, #f39c12);
+    --blue-gradient: linear-gradient(45deg, #1e3a8a, #1e40af);
+    --header-gradient: linear-gradient(45deg, #2c3e50, #34495e);
+}
+
+body {
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+    min-height: 100vh;
+}
+
+.card, .bg-white {
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    border-radius: 15px;
+}
+
+h1 {
+    background: var(--header-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+/* Custom card styles for theming */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.card-header {
+    background: var(--header-gradient) !important;
+    color: white;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#selectionSummary {
+    color: var(--secondary-color);
+}
+
+#streakBadge {
+    background: var(--primary-color) !important;
+    color: white !important;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Dark mode overrides for Bootstrap */
+[data-theme="dark"] .form-text {
+    color: var(--secondary-color) !important;
+}
+
+[data-theme="dark"] .nav-link {
+    color: var(--secondary-color);
+}
+
+[data-theme="dark"] .nav-link.active {
+    color: var(--primary-color);
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: var(--secondary-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .btn-outline-warning {
+    color: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+[data-theme="dark"] .btn-outline-warning:hover {
+    background-color: var(--warning-color);
+    color: #000;
+}
+
+[data-theme="dark"] .btn-outline-success {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+[data-theme="dark"] .btn-outline-success:hover {
+    background-color: var(--success-color);
+    color: white;
+}
+
+[data-theme="dark"] .btn-outline-danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+[data-theme="dark"] .btn-outline-danger:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--secondary-color) !important;
+}
+
+[data-theme="dark"] .list-group-item {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+.number-ball {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--blue-gradient);
+    color: white;
+    font-weight: bold;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease-in-out;
+    cursor: pointer;
+}
+
+.number-ball:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* Placeholder balls */
+.number-ball.placeholder {
+    background-color: #95a5a6;
+    animation: pulse 1.5s infinite;
+}
+
+/* Focus style for selects */
+.form-select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+}
+
+/* Loading spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Buttons with ripple effect */
+.btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transition: width 0.6s, height 0.6s;
+    transform: translate(-50%, -50%);
+}
+
+.btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .number-ball {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+    .container {
+        padding: 1rem;
+    }
+}

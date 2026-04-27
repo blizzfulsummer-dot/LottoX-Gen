@@ -1,0 +1,29 @@
+<svg viewBox="0 0 200 200" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <circle cx="100" cy="100" r="100" fill="#0d3b66"/>
+
+  <!-- Ball group (centered composition) -->
+  <g font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="middle">
+
+    <!-- Center ball -->
+    <circle cx="100" cy="120" r="42" fill="#f1c40f"/>
+    <circle cx="100" cy="120" r="26" fill="white"/>
+    <text x="100" y="120" font-size="24">7</text>
+
+    <!-- Top ball -->
+    <circle cx="100" cy="60" r="34" fill="#3498db"/>
+    <circle cx="100" cy="60" r="20" fill="white"/>
+    <text x="100" y="60" font-size="18">23</text>
+
+    <!-- Left ball -->
+    <circle cx="50" cy="100" r="34" fill="#2ecc71"/>
+    <circle cx="50" cy="100" r="20" fill="white"/>
+    <text x="50" y="100" font-size="18">14</text>
+
+    <!-- Right ball -->
+    <circle cx="150" cy="100" r="34" fill="#e74c3c"/>
+    <circle cx="150" cy="100" r="20" fill="white"/>
+    <text x="150" y="100" font-size="18">31</text>
+
+  </g>
+</svg>
