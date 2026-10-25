@@ -1,257 +1,417 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="AI-powered lotto number suggestions for various variants. Get smart predictions with probability charts.">
-<meta name="keywords" content="lotto, AI, suggestions, predictions, numbers">
-<title>Lotto AI-X Gen</title>
-<link rel="icon" type="image/svg+xml" href="image/icon/titleIcon.svg">
-<!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- Bootstrap Icons -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-<!-- Custom CSS -->
-<link rel="stylesheet" href="styles.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore lotto number suggestions, review probability visualizations, and keep your picks organized.">
+  <meta name="theme-color" content="#101827">
+  <title>Lotto AI-X Gen — Your number lab</title>
+  <link rel="icon" type="image/svg+xml" href="image/icon/titleIcon.svg">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f5f7fb;
+      --surface: #ffffff;
+      --surface-2: #f8faff;
+      --ink: #172033;
+      --muted: #6c7890;
+      --line: #e5eaf2;
+      --brand: #6158e8;
+      --brand-strong: #4b42d4;
+      --brand-soft: #efeeff;
+      --mint: #17a987;
+      --mint-soft: #e6faf4;
+      --gold: #e4a52c;
+      --danger: #d94d64;
+      --shadow: 0 16px 48px rgba(25, 38, 72, .07);
+      --radius: 22px;
+    }
+    body.dark-mode {
+      color-scheme: dark;
+      --page: #0d1320;
+      --surface: #151e2e;
+      --surface-2: #1a2639;
+      --ink: #edf2ff;
+      --muted: #a2aec5;
+      --line: #2a374c;
+      --brand: #9a92ff;
+      --brand-strong: #b5afff;
+      --brand-soft: #292747;
+      --mint: #57d8b7;
+      --mint-soft: #173b38;
+      --gold: #f3c56d;
+      --danger: #ff8397;
+      --shadow: 0 16px 48px rgba(0, 0, 0, .2);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--page); color: var(--ink);
+      font: 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      transition: background .2s ease, color .2s ease;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, select:focus-visible, a:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--brand) 45%, transparent); outline-offset: 3px;
+    }
+    .app-shell { max-width: 1160px; width: min(100% - 40px, 1160px); margin: 0 auto; padding: 28px 0 56px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark { width: 48px; height: 48px; flex: 0 0 auto; border-radius: 16px; display: grid; place-items: center; color: white; background: linear-gradient(140deg, #8078ff, #4b42d4); box-shadow: 0 8px 20px #6158e83b; }
+    .brand-mark svg { width: 34px; height: 34px; }
+    .brand h1 { margin: 0; font-size: clamp(1.08rem, 2.5vw, 1.35rem); letter-spacing: -.045em; font-weight: 800; }
+    .brand p { margin: 2px 0 0; color: var(--muted); font-size: .82rem; }
+    .icon-btn { border: 1px solid var(--line); color: var(--ink); background: var(--surface); border-radius: 13px; padding: 10px 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .16s ease, border-color .16s ease, background .16s ease; }
+    .icon-btn:hover { border-color: var(--brand); transform: translateY(-1px); }
+    .hero { position: relative; overflow: hidden; padding: clamp(24px, 5vw, 42px); border-radius: 28px; color: white; background: radial-gradient(circle at 85% 12%, #8c83ff 0, transparent 28%), linear-gradient(120deg, #25234d, #4d47b8 58%, #655de8); box-shadow: 0 22px 54px #433caa26; margin-bottom: 24px; }
+    .hero:after { content: ""; position: absolute; width: 220px; height: 220px; right: -75px; bottom: -130px; border: 1px solid #ffffff30; border-radius: 50%; box-shadow: 0 0 0 24px #ffffff0b, 0 0 0 48px #ffffff08; pointer-events: none; }
+    .hero-content { position: relative; z-index: 1; max-width: 720px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; font-weight: 800; color: #dcd9ff; margin-bottom: 12px; }
+    .eyebrow-dot { width: 7px; height: 7px; background: #7bf0cd; border-radius: 50%; box-shadow: 0 0 0 4px #7bf0cd22; }
+    .hero h2 { font-size: clamp(1.8rem, 5vw, 3rem); letter-spacing: -.055em; line-height: 1.06; margin: 0 0 14px; max-width: 650px; font-weight: 850; }
+    .hero p { margin: 0; max-width: 600px; color: #e3e3ff; font-size: clamp(.95rem, 2vw, 1.05rem); }
+    .hero-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; margin-top: 24px; font-size: .82rem; color: #e2e0ff; }
+    .hero-foot span { display: inline-flex; align-items: center; gap: 7px; }
+    .layout { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); gap: 22px; align-items: start; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; min-width: 0; }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 23px 24px 0; }
+    .panel-title { display: flex; align-items: center; gap: 11px; }
+    .title-icon { display: grid; place-items: center; width: 39px; height: 39px; flex: 0 0 auto; border-radius: 13px; color: var(--brand); background: var(--brand-soft); font-size: 1.1rem; }
+    .panel h3 { font-size: 1.02rem; letter-spacing: -.025em; margin: 0; font-weight: 800; }
+    .panel-subtitle { color: var(--muted); font-size: .82rem; margin: 4px 0 0; }
+    .panel-body { padding: 22px 24px 24px; }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 14px; }
+    .field label { display: flex; align-items: center; gap: 7px; font-size: .82rem; font-weight: 750; margin-bottom: 8px; }
+    .field label i { color: var(--brand); font-size: 1rem; }
+    .field select { width: 100%; min-height: 48px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); border-radius: 12px; padding: 0 38px 0 13px; outline: none; transition: border .15s ease, box-shadow .15s ease; }
+    .field select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 13%, transparent); }
+    .field-help { color: var(--muted); font-size: .75rem; margin: 7px 0 0; }
+    .selection-summary { display: flex; align-items: center; gap: 9px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; margin-top: 20px; font-size: .8rem; }
+    .selection-summary i { color: var(--brand); }
+    .primary-btn { width: 100%; min-height: 52px; margin-top: 16px; display: flex; justify-content: center; align-items: center; gap: 9px; border: 0; border-radius: 14px; color: #fff; font-weight: 800; background: linear-gradient(105deg, #6158e8, #766cf4); box-shadow: 0 9px 22px #6158e83b; transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; }
+    .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 13px 25px #6158e84a; filter: saturate(1.08); }
+    .primary-btn:active { transform: translateY(0); }
+    .small-note { color: var(--muted); text-align: center; font-size: .74rem; margin: 12px 0 0; }
+    .result-panel { min-height: 260px; }
+    .result-panel .panel-body { padding-top: 18px; }
+    .result-placeholder { min-height: 195px; display: grid; place-items: center; text-align: center; padding: 22px; border: 1px dashed var(--line); border-radius: 16px; background: var(--surface-2); }
+    .placeholder-art { width: 58px; height: 58px; border-radius: 19px; display: grid; place-items: center; margin: 0 auto 12px; background: var(--brand-soft); color: var(--brand); font-size: 1.5rem; }
+    .result-placeholder h4 { margin: 0 0 5px; font-size: .95rem; font-weight: 800; }
+    .result-placeholder p { max-width: 290px; color: var(--muted); margin: 0; font-size: .82rem; }
+    #numbers { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 8px 0 24px; }
+    #numbers .number-ball, .number-ball { width: clamp(43px, 5vw, 54px); height: clamp(43px, 5vw, 54px); border-radius: 50%; display: inline-grid; place-items: center; color: #3832a7; background: linear-gradient(145deg, #fff, #e8e7ff); border: 1px solid #d8d5ff; box-shadow: 0 5px 12px #3730a314, inset 0 2px 0 #fff; font-size: 1rem; font-weight: 850; }
+    #probChart { max-height: 240px; width: 100%; }
+    .result-info { background: var(--brand-soft); border: 1px solid color-mix(in srgb, var(--brand) 20%, transparent); border-radius: 14px; padding: 14px; margin-top: 18px; }
+    .result-info h6 { margin: 0 0 6px; font-weight: 800; }
+    .result-info p { color: var(--muted); font-size: .82rem; }
+    .confidence-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; background: var(--mint-soft); color: var(--mint); padding: 6px 10px; font-size: .74rem; font-weight: 800; }
+    .share-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .share-row .icon-btn { font-size: .8rem; }
+    .streak { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; border: 1px solid #f1d9a4; background: #fff8e7; color: #8b5d0a; padding: 8px 13px; font-size: .78rem; font-weight: 800; }
+    body.dark-mode .streak { background: #332a1c; color: #ffd27a; border-color: #514027; }
+    .history-panel { margin-top: 22px; }
+    .history-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+    .tab-btn { border: 0; border-radius: 9px; background: transparent; color: var(--muted); padding: 8px 13px; font-size: .82rem; font-weight: 750; }
+    .tab-btn.active { color: var(--brand); background: var(--surface); box-shadow: 0 2px 7px #1a24420c; }
+    .toolbar-actions { display: flex; gap: 7px; flex-wrap: wrap; }
+    .toolbar-actions .icon-btn { padding: 8px 11px; font-size: .78rem; }
+    .history-empty { padding: 24px 12px; border: 1px dashed var(--line); border-radius: 14px; color: var(--muted); text-align: center; font-size: .85rem; }
+    .history-empty i { display: block; font-size: 1.5rem; margin-bottom: 7px; color: var(--brand); }
+    #historyList, #favoritesList { padding: 0; margin: 0; list-style: none; }
+    .list-group-item { border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); padding: 14px 0; }
+    .list-group-item:last-child { border-bottom: 0; }
+    .list-group-item button { margin-left: 5px; }
+    #bulkNumbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .bulk-card { border: 1px solid var(--line); background: var(--surface-2); border-radius: 14px; padding: 13px; }
+    .bulk-card .number-ball { width: 31px; height: 31px; font-size: .75rem; }
+    .bulk-card .numbers-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .bulk-card h6 { font-size: .78rem; color: var(--muted); margin: 0 0 10px; }
+    .message { padding: 10px 13px; border-radius: 12px; margin-top: 14px; text-align: center; font-size: .85rem; }
+    #message { color: var(--brand); background: var(--brand-soft); }
+    #error { color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, var(--surface)); }
+    .toast-container { position: fixed; right: 18px; top: 18px; z-index: 1000; }
+    .toast { display: none; padding: 13px 16px; margin-bottom: 8px; color: white; border-radius: 12px; box-shadow: var(--shadow); }
+    .toast.show { display: block; }
+    .toast.bg-success { background: #16866e; }
+    .toast.bg-danger { background: #bf3851; }
+    .footer-note { color: var(--muted); text-align: center; font-size: .75rem; padding: 25px 10px 0; }
+    .footer-note strong { color: var(--ink); }
+    [hidden] { display: none !important; }
+    @media (max-width: 850px) {
+      .layout { grid-template-columns: 1fr; }
+      .result-panel { order: -1; }
+      .hero { border-radius: 23px; }
+    }
+    @media (max-width: 560px) {
+      .app-shell { width: min(100% - 24px, 1160px); padding-top: 16px; }
+      .topbar { margin-bottom: 18px; }
+      .brand-mark { width: 42px; height: 42px; border-radius: 13px; }
+      .brand p { font-size: .74rem; }
+      .icon-btn .button-label { display: none; }
+      .hero { padding: 25px 21px; margin-bottom: 16px; }
+      .hero h2 { font-size: 2rem; }
+      .hero-foot { gap: 9px 13px; }
+      .layout { gap: 16px; }
+      .panel { border-radius: 18px; }
+      .panel-head { padding: 19px 18px 0; }
+      .panel-body { padding: 18px; }
+      .field-grid { grid-template-columns: 1fr; gap: 15px; }
+      .selection-summary { align-items: flex-start; }
+      .history-panel { margin-top: 16px; }
+      .history-toolbar { align-items: stretch; }
+      .toolbar-actions { width: 100%; }
+      .toolbar-actions .icon-btn { flex: 1; justify-content: center; }
+      #bulkNumbers { grid-template-columns: 1fr; }
+      .streak { font-size: .73rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
 </head>
-<body class="bg-light text-dark">
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" fill="white" fill-opacity=".14"/>
+            <circle cx="24" cy="29" r="11" fill="#B9F6E6"/><circle cx="24" cy="29" r="7" fill="white"/>
+            <circle cx="15" cy="16" r="8" fill="#C9C5FF"/><circle cx="15" cy="16" r="5" fill="white"/>
+            <circle cx="33" cy="15" r="8" fill="#FFE2A8"/><circle cx="33" cy="15" r="5" fill="white"/>
+            <path d="M24 26.5v5M22 28h4" stroke="#6158E8" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="15" cy="16" r="1.8" fill="#6158E8"/><circle cx="33" cy="15" r="1.8" fill="#6158E8"/>
+          </svg>
+        </div>
+        <div><h1>Lotto AI-X Gen</h1><p>Your personal number lab</p></div>
+      </div>
+      <button id="themeToggle" class="icon-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <i class="bi bi-moon-stars" aria-hidden="true"></i><span class="button-label">Dark mode</span>
+      </button>
+    </header>
 
-<div class="container py-5">
-    <!-- Theme Toggle -->
-    <div class="d-flex justify-content-end mb-3">
-        <button id="themeToggle" class="btn btn-outline-secondary btn-sm" onclick="toggleTheme()">
-            <i class="bi bi-moon-fill"></i> Dark Mode
-        </button>
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-content">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> Explore your next combination</div>
+        <h2 id="heroTitle">A little curiosity.<br>A fresh set of numbers.</h2>
+        <p>Generate, compare, and save lotto number suggestions in one calm, focused workspace.</p>
+        <div class="hero-foot">
+          <span><i class="bi bi-lightning-charge" aria-hidden="true"></i> Quick generation</span>
+          <span><i class="bi bi-bar-chart" aria-hidden="true"></i> Visual summaries</span>
+          <span><i class="bi bi-bookmark-heart" aria-hidden="true"></i> Saved picks</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="d-flex justify-content-between align-items-center mb-3" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;">
+      <div class="streak" id="streakBadge" title="Counts your active suggestion streak"><i class="bi bi-fire" aria-hidden="true"></i> Suggestion streak <span id="streakCount">0</span></div>
+      <span style="color:var(--muted);font-size:.77rem;"><i class="bi bi-shield-check" aria-hidden="true"></i> For entertainment, not a guarantee</span>
     </div>
 
-    <h1 class="text-center mb-5 fw-bold d-flex justify-content-center align-items-center gap-2">
-  <!-- SVG here -->
-   <svg viewBox="0 0 200 200" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <circle cx="100" cy="100" r="100" fill="#0d6efd"/>
-
-    <!-- Ball group (centered composition) -->
-    <g font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="middle">
-
-      <!-- Center ball -->
-      <circle cx="100" cy="120" r="42" fill="#74b9ff"/>
-      <circle cx="100" cy="120" r="26" fill="white"/>
-      <text x="100" y="120" font-size="24">7</text>
-
-    <!-- Top ball -->
-    <circle cx="100" cy="60" r="34" fill="#74b9ff"/>
-    <circle cx="100" cy="60" r="20" fill="white"/>
-    <text x="100" y="60" font-size="18">23</text>
-
-    <!-- Left ball -->
-    <circle cx="50" cy="100" r="34" fill="#74b9ff"/>
-    <circle cx="50" cy="100" r="20" fill="white"/>
-    <text x="50" y="100" font-size="18">14</text>
-
-    <!-- Right ball -->
-    <circle cx="150" cy="100" r="34" fill="#74b9ff"/>
-    <circle cx="150" cy="100" r="20" fill="white"/>
-    <text x="150" y="100" font-size="18">31</text>
-
-  </g>
-</svg>
-  Lotto AI-X Gen
-</h1>
-
-    <!-- Streak Counter -->
-    <div class="text-center mb-4">
-        <div class="badge bg-primary text-white fs-6 p-2" id="streakBadge" title="Counts your active suggestion streak">🔥 Suggestion Streak: <span id="streakCount">0</span></div>
-    </div>
-
-    <!-- Configuration Card -->
-    <div class="card mb-5 shadow-lg border-0" style="background: var(--card-bg); backdrop-filter: blur(10px);">
-        <div class="card-header bg-primary text-white text-center">
-            <h5 class="mb-0"><i class="bi bi-gear-fill me-2"></i>Configuration</h5>
+    <section class="layout" aria-label="Suggestion workspace">
+      <section class="panel" aria-labelledby="configTitle">
+        <div class="panel-head">
+          <div class="panel-title"><div class="title-icon"><i class="bi bi-sliders2" aria-hidden="true"></i></div><div><h3 id="configTitle">Build your suggestion</h3><p class="panel-subtitle">Choose the settings that suit your style.</p></div></div>
         </div>
-        <div class="card-body p-4">
-            <div class="row g-4">
-                <!-- Variant Selection -->
-                <div class="col-md-6">
-                    <label for="variant" class="form-label fw-semibold d-flex align-items-center">
-                        <i class="bi bi-dice-6-fill text-primary me-2"></i> Lotto Variant
-                    </label>
-                    <select id="variant" class="form-select form-select-lg" aria-describedby="variant-help" data-bs-toggle="tooltip" data-bs-placement="right" title="Choose the lotto variant (e.g., 6/42)">
-                        <option value="6_42">6/42</option>
-                        <option value="6_45">6/45</option>
-                        <option value="6_49">6/49</option>
-                        <option value="6_55">6/55</option>
-                        <option value="6_58">6/58</option>
-                    </select>
-                    <div id="variant-help" class="form-text">Select the lotto game variant.</div>
-                </div>
-
-                <!-- Model Type Selection -->
-                <div class="col-md-6">
-                    <label for="modelType" class="form-label fw-semibold d-flex align-items-center">
-                        <i class="bi bi-robot text-success me-2"></i> AI Model
-                    </label>
-                    <select id="modelType" class="form-select form-select-lg" aria-describedby="model-help" data-bs-toggle="tooltip" data-bs-placement="right" title="ODE for standard, Hybrid for advanced AI">
-                        <option value="">ODE</option>
-                        <option value="_hybrid">Hybrid</option>
-                    </select>
-                    <div id="model-help" class="form-text">Choose the AI model type.</div>
-                </div>
-
-                <!-- Mode Selection -->
-                <div class="col-md-6">
-                    <label for="mode" class="form-label fw-semibold d-flex align-items-center">
-                        <i class="bi bi-sliders text-warning me-2"></i> Prediction Mode
-                    </label>
-                    <select id="mode" class="form-select form-select-lg" aria-describedby="mode-help" data-bs-toggle="tooltip" data-bs-placement="right" title="Deterministic: exact, Balanced: mixed, Guided: creative">
-                        <option value="deterministic">Deterministic</option>
-                        <option value="balance" selected>Balanced</option>
-                        <option value="guided-random">Guided Random</option>
-                    </select>
-                    <div id="mode-help" class="form-text">Select the prediction strategy.</div>
-                </div>
-
-                <!-- Bulk Suggestions -->
-                <div class="col-md-6">
-                    <label for="bulkCount" class="form-label fw-semibold d-flex align-items-center">
-                        <i class="bi bi-stack text-info me-2"></i> Bulk Count
-                    </label>
-                    <select id="bulkCount" class="form-select form-select-lg" data-bs-toggle="tooltip" data-bs-placement="right" title="Generate multiple suggestions at once">
-                        <option value="1" selected>1 (Single)</option>
-                        <option value="2">2</option>
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                    </select>
-                    <div class="form-text">Generate multiple suggestions in one go.</div>
-                </div>
+        <div class="panel-body">
+          <div class="field-grid">
+            <div class="field">
+              <label for="variant"><i class="bi bi-dice-5" aria-hidden="true"></i> Lotto variant</label>
+              <select id="variant" aria-describedby="variant-help">
+                <option value="6_42">6/42</option><option value="6_45">6/45</option><option value="6_49">6/49</option><option value="6_55">6/55</option><option value="6_58">6/58</option>
+              </select>
+              <p class="field-help" id="variant-help">Select the game format.</p>
             </div>
-
-            <div class="text-center mb-3 text-secondary" id="selectionSummary">Selected: 6/42 · ODE · Balanced · 1 suggestion</div>
-
-            <!-- Submit Button -->
-            <div class="text-center mt-4">
-                <button onclick="getSuggestion()" class="btn btn-primary btn-lg px-5 py-3 fw-bold shadow" aria-label="Get lotto number suggestion" data-bs-toggle="tooltip" data-bs-placement="top" title="Generate AI-powered lotto suggestions">
-                    <i class="bi bi-magic me-2"></i>Get Suggestion
-                </button>
+            <div class="field">
+              <label for="modelType"><i class="bi bi-cpu" aria-hidden="true"></i> AI model</label>
+              <select id="modelType" aria-describedby="model-help">
+                <option value="_hybrid">Hybrid</option><option value="">ODE</option>
+              </select>
+              <p class="field-help" id="model-help">Choose the available model.</p>
             </div>
-        </div>
-    </div>
-
-    <!-- Results Card -->
-    <div id="result" class="card shadow-lg border-0" style="background: var(--card-bg); backdrop-filter: blur(10px); display:none;">
-        <div class="card-header bg-success text-white text-center">
-            <h5 class="mb-0"><i class="bi bi-trophy-fill me-2"></i>AI Suggestions</h5>
-        </div>
-        <div class="card-body p-4">
-        <div id="singleResult">
-            <div id="numbers" class="d-flex flex-wrap justify-content-center gap-2 mb-4"></div>
-            <canvas id="probChart" height="200"></canvas>
-            <div id="resultInfo" class="result-info mt-4 p-3 rounded" style="display:none; background: rgba(13, 110, 253, 0.08); border: 1px solid rgba(13, 110, 253, 0.15);">
-                <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
-                    <div>
-                        <h6 class="mb-2">Suggestion Summary</h6>
-                        <p id="resultSummaryText" class="mb-2 text-secondary"></p>
-                        <p id="resultTip" class="mb-0 small text-muted">The chart ranks likely numbers — higher bars are stronger candidates.</p>
-                    </div>
-                    <div class="text-md-end">
-                        <span class="badge bg-info text-white" id="resultConfidence">Confidence</span>
-                    </div>
-                </div>
+            <div class="field">
+              <label for="mode"><i class="bi bi-tune" aria-hidden="true"></i> Suggestion mode</label>
+              <select id="mode" aria-describedby="mode-help">
+                <option value="deterministic">Deterministic</option><option value="balance" selected>Balanced</option><option value="guided-random">Guided random</option>
+              </select>
+              <p class="field-help" id="mode-help">Choose a generation strategy.</p>
             </div>
-            <div class="mt-3 text-center">
-                <small class="text-muted">Share your lucky numbers!</small><br>
-                <button class="btn btn-outline-primary btn-sm me-2" onclick="shareOnTwitter()">Twitter</button>
-                <button class="btn btn-outline-primary btn-sm" onclick="shareOnFacebook()">Facebook</button>
+            <div class="field">
+              <label for="bulkCount"><i class="bi bi-collection" aria-hidden="true"></i> Number of sets</label>
+              <select id="bulkCount">
+                <option value="1" selected>1 set · Single</option><option value="2">2 sets</option><option value="5">5 sets</option><option value="10">10 sets</option><option value="20">20 sets</option>
+              </select>
+              <p class="field-help">Generate up to 20 sets at once.</p>
             </div>
+          </div>
+          <div class="selection-summary" id="selectionSummary"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Selected: 6/42 · ODE · Balanced · 1 suggestion</span></div>
+          <button onclick="getSuggestion()" class="primary-btn" type="button" aria-label="Get lotto number suggestion">
+            <i class="bi bi-stars" aria-hidden="true"></i> Generate suggestion <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+          <p class="small-note"><i class="bi bi-lock" aria-hidden="true"></i> Your picks stay in this browser unless your existing script sends them elsewhere.</p>
         </div>
-        <div id="bulkResult" style="display:none;">
-            <h5 class="text-center mb-3">Bulk Suggestions</h5>
-            <div id="bulkNumbers" class="row g-3"></div>
-        </div>
-        </div>
-    </div>
+      </section>
 
-    <!-- History & Favorites Card -->
-    <div class="card shadow-lg border-0 mt-4" style="background: var(--card-bg); backdrop-filter: blur(10px);">
-        <div class="card-header bg-info text-white text-center">
-            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>History & Favorites</h5>
+      <section class="panel result-panel" id="result" aria-labelledby="resultTitle" style="display:none;">
+        <div class="panel-head">
+          <div class="panel-title"><div class="title-icon" style="color:var(--mint);background:var(--mint-soft);"><i class="bi bi-stars" aria-hidden="true"></i></div><div><h3 id="resultTitle">Your suggestions</h3><p class="panel-subtitle">A clear view of the set you generated.</p></div></div>
         </div>
-        <div class="card-body p-4">
-            <ul class="nav nav-pills justify-content-center mb-4" id="historyTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="true">
-                        <i class="bi bi-list-ul me-1"></i>History
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="favorites-tab" data-bs-toggle="tab" data-bs-target="#favorites" type="button" role="tab" aria-controls="favorites" aria-selected="false">
-                        <i class="bi bi-star-fill me-1"></i>Favorites
-                    </button>
-                </li>
-            </ul>
-            <div class="tab-content" id="historyTabsContent">
-            <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
-                <div class="mb-3 d-flex flex-wrap gap-2 justify-content-center">
-                    <button class="btn btn-outline-secondary" onclick="toggleHistoryVisibility()">Toggle History</button>
-                    <button class="btn btn-outline-success" onclick="exportHistory()">Export History</button>
-                    <button class="btn btn-outline-danger" onclick="clearHistory()">Clear History</button>
-                </div>
-                <div class="card card-body" id="historyPanel">
-                    <div id="historyEmpty" class="alert alert-secondary text-center mb-0">
-                        Your recent suggestions will appear here.
-                    </div>
-                    <ul id="historyList" class="list-group list-group-flush" style="display:none;">
-                        <!-- History items will be added here -->
-                    </ul>
-                </div>
+        <div class="panel-body">
+          <div id="singleResult">
+            <div id="numbers" aria-live="polite"></div>
+            <canvas id="probChart" height="200" aria-label="Probability chart" role="img"></canvas>
+            <div id="resultInfo" class="result-info" style="display:none;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div><h6>Suggestion summary</h6><p id="resultSummaryText" style="margin:0 0 8px;"></p><p id="resultTip" style="margin:0;font-size:.77rem;">Charts are descriptive visualizations, not evidence that a number is more likely to be drawn.</p></div>
+                <div><span class="confidence-chip" id="resultConfidence"><i class="bi bi-info-circle" aria-hidden="true"></i> Model estimate</span></div>
+              </div>
             </div>
-            <div class="tab-pane fade" id="favorites" role="tabpanel" aria-labelledby="favorites-tab">
-                <div class="mb-3 d-flex flex-wrap gap-2 justify-content-center">
-                    <button class="btn btn-outline-success" onclick="exportFavorites()">Export Favorites</button>
-                    <button class="btn btn-outline-danger" onclick="clearFavorites()">Clear Favorites</button>
-                </div>
-                <div class="card card-body" id="favoritesPanel">
-                    <div id="favoritesEmpty" class="alert alert-secondary text-center mb-0">
-                        Favorite suggestions will be stored here.
-                    </div>
-                    <ul id="favoritesList" class="list-group list-group-flush" style="display:none;">
-                        <!-- Favorites items will be added here -->
-                    </ul>
-                </div>
+            <div class="share-row">
+              <span style="align-self:center;color:var(--muted);font-size:.78rem;">Share your pick</span>
+              <button class="icon-btn" type="button" onclick="shareOnTwitter()"><i class="bi bi-twitter-x" aria-hidden="true"></i> X / Twitter</button>
+              <button class="icon-btn" type="button" onclick="shareOnFacebook()"><i class="bi bi-facebook" aria-hidden="true"></i> Facebook</button>
             </div>
+          </div>
+          <div id="bulkResult" style="display:none;">
+            <h4 style="font-size:.9rem;margin:0 0 13px;">Generated sets</h4>
+            <div id="bulkNumbers"></div>
+          </div>
         </div>
-    </div>
-
-    <!-- Messages -->
-    <div id="message" class="text-center fw-bold text-warning mt-3" style="display:none;"></div>
-    <div id="error" class="text-center fw-bold text-danger mt-3" style="display:none;"></div>
-
-    <!-- Toast Container -->
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    Suggestion generated successfully!
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
+      </section>
+      <section class="panel result-panel" id="resultEmpty" aria-label="Suggestion preview">
+        <div class="panel-head"><div class="panel-title"><div class="title-icon"><i class="bi bi-stars" aria-hidden="true"></i></div><div><h3>Your next set starts here</h3><p class="panel-subtitle">Your results will appear in this space.</p></div></div></div>
+        <div class="panel-body">
+          <div class="result-placeholder"><div><div class="placeholder-art"><i class="bi bi-balloon" aria-hidden="true"></i></div><h4>Ready when you are</h4><p>Pick a variant and generation mode, then tap the button to create your first suggestion.</p></div></div>
+          <p class="small-note">Every valid combination has the same chance in a fair, random draw.</p>
         </div>
-        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    Failed to fetch suggestion. Check API.
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
+      </section>
+    </section>
+
+    <section class="panel history-panel" aria-labelledby="historyTitle">
+      <div class="panel-head">
+        <div class="panel-title"><div class="title-icon"><i class="bi bi-archive" aria-hidden="true"></i></div><div><h3 id="historyTitle">Your collection</h3><p class="panel-subtitle">Revisit past suggestions or keep favorites close.</p></div></div>
+      </div>
+      <div class="panel-body">
+        <div class="history-toolbar">
+          <div class="tabs" role="tablist" aria-label="Suggestion collection">
+            <button class="tab-btn active" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="true"><i class="bi bi-clock-history" aria-hidden="true"></i> History</button>
+            <button class="tab-btn" id="favorites-tab" data-bs-toggle="tab" data-bs-target="#favorites" type="button" role="tab" aria-controls="favorites" aria-selected="false"><i class="bi bi-heart" aria-hidden="true"></i> Favorites</button>
+          </div>
+          <div class="toolbar-actions" id="historyActions">
+            <button class="icon-btn" type="button" onclick="toggleHistoryVisibility()"><i class="bi bi-eye" aria-hidden="true"></i> Toggle</button>
+            <button class="icon-btn" type="button" onclick="exportHistory()"><i class="bi bi-download" aria-hidden="true"></i> Export</button>
+            <button class="icon-btn" type="button" onclick="clearHistory()"><i class="bi bi-trash3" aria-hidden="true"></i> Clear</button>
+          </div>
+          <div class="toolbar-actions" id="favoriteActions" hidden>
+            <button class="icon-btn" type="button" onclick="exportFavorites()"><i class="bi bi-download" aria-hidden="true"></i> Export</button>
+            <button class="icon-btn" type="button" onclick="clearFavorites()"><i class="bi bi-trash3" aria-hidden="true"></i> Clear</button>
+          </div>
         </div>
-    </div>
-</div>
+        <div class="tab-content" id="historyTabsContent">
+          <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
+            <div class="history-empty" id="historyEmpty"><i class="bi bi-inbox" aria-hidden="true"></i>Your recent suggestions will appear here.</div>
+            <ul id="historyList" style="display:none;"></ul>
+          </div>
+          <div class="tab-pane fade" id="favorites" role="tabpanel" aria-labelledby="favorites-tab" hidden>
+            <div class="history-empty" id="favoritesEmpty"><i class="bi bi-heart" aria-hidden="true"></i>Save a suggestion to find it here later.</div>
+            <ul id="favoritesList" style="display:none;"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<script src="script.js"></script>
+    <div id="message" class="message" role="status" aria-live="polite" style="display:none;"></div>
+    <div id="error" class="message" role="alert" style="display:none;"></div>
+    <footer class="footer-note"><strong>Play thoughtfully.</strong> Lotto draws are random; these suggestions cannot predict or guarantee a win. Set a budget and only play what you can afford to lose.</footer>
+  </main>
 
-<!-- Bootstrap JS (optional if you want dropdown animations) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <div class="toast-container" aria-live="polite" aria-atomic="true">
+    <div id="successToast" class="toast bg-success" role="status">Suggestion generated successfully!</div>
+    <div id="errorToast" class="toast bg-danger" role="alert">Failed to fetch suggestion. Check API.</div>
+  </div>
 
+  <script>
+    // Keep the existing script.js API and function names intact.
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      const active = document.body.classList.contains('dark-mode');
+      const button = document.getElementById('themeToggle');
+      if (button) {
+        button.innerHTML = active
+          ? '<i class="bi bi-sun" aria-hidden="true"></i><span class="button-label">Light mode</span>'
+          : '<i class="bi bi-moon-stars" aria-hidden="true"></i><span class="button-label">Dark mode</span>';
+        button.setAttribute('aria-label', active ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+      try { localStorage.setItem('lotto-theme', active ? 'dark' : 'light'); } catch (_) {}
+      if (window.Chart && Chart.instances) {
+        Object.values(Chart.instances).forEach(chart => {
+          if (chart && chart.options && chart.options.scales) {
+            const color = getComputedStyle(document.body).getPropertyValue('--muted').trim();
+            Object.values(chart.options.scales).forEach(scale => {
+              if (scale.ticks) scale.ticks.color = color;
+              if (scale.grid) scale.grid.color = getComputedStyle(document.body).getPropertyValue('--line').trim();
+            });
+            chart.update('none');
+          }
+        });
+      }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (localStorage.getItem('lotto-theme') === 'dark') document.body.classList.add('dark-mode');
+      } catch (_) {}
+      const isDark = document.body.classList.contains('dark-mode');
+      const themeButton = document.getElementById('themeToggle');
+      if (themeButton && isDark) {
+        themeButton.innerHTML = '<i class="bi bi-sun" aria-hidden="true"></i><span class="button-label">Light mode</span>';
+        themeButton.setAttribute('aria-label', 'Switch to light mode');
+      }
+      // Update the visible configuration summary without requiring a network request.
+      const ids = ['variant', 'modelType', 'mode', 'bulkCount'];
+      const summary = document.getElementById('selectionSummary');
+      const updateSummary = () => {
+        if (!summary) return;
+        const variant = document.getElementById('variant')?.selectedOptions[0]?.textContent || '6/42';
+        const model = document.getElementById('modelType')?.value === '_hybrid' ? 'Hybrid' : 'ODE';
+        const modeEl = document.getElementById('mode');
+        const mode = modeEl?.selectedOptions[0]?.textContent || 'Balanced';
+        const count = Number(document.getElementById('bulkCount')?.value || 1);
+        summary.innerHTML = '<i class="bi bi-info-circle" aria-hidden="true"></i><span>Selected: ' +
+          variant + ' · ' + model + ' · ' + mode + ' · ' + count + (count === 1 ? ' suggestion' : ' suggestions') + '</span>';
+      };
+      ids.forEach(id => document.getElementById(id)?.addEventListener('change', updateSummary));
+      updateSummary();
+
+      // Make the tabs work without requiring Bootstrap's tab plugin.
+      const historyTab = document.getElementById('history-tab');
+      const favoritesTab = document.getElementById('favorites-tab');
+      const historyPane = document.getElementById('history');
+      const favoritesPane = document.getElementById('favorites');
+      const historyActions = document.getElementById('historyActions');
+      const favoriteActions = document.getElementById('favoriteActions');
+      const switchTab = (favorites) => {
+        historyTab?.classList.toggle('active', !favorites);
+        favoritesTab?.classList.toggle('active', favorites);
+        historyTab?.setAttribute('aria-selected', String(!favorites));
+        favoritesTab?.setAttribute('aria-selected', String(favorites));
+        historyPane?.classList.toggle('show', !favorites);
+        historyPane?.classList.toggle('active', !favorites);
+        favoritesPane?.classList.toggle('show', favorites);
+        favoritesPane?.classList.toggle('active', favorites);
+        if (favoritesPane) favoritesPane.hidden = !favorites;
+        if (historyPane) historyPane.hidden = favorites;
+        if (historyActions) historyActions.hidden = favorites;
+        if (favoriteActions) favoriteActions.hidden = !favorites;
+      };
+      historyTab?.addEventListener('click', () => switchTab(false));
+      favoritesTab?.addEventListener('click', () => switchTab(true));
+    });
+  </script>
+  <script src="script.js" defer></script>
 </body>
 </html>

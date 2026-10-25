@@ -111,6 +111,7 @@ function updateSelectionSummary() {
     const modelLabel = modelType === '' ? 'ODE' : 'Hybrid';
     const summaryText = `Selected: ${variant.replace('_', '/')} · ${modelLabel} · ${formatLabel(mode)} · ${bulkCount} suggestion${bulkCount === 1 ? '' : 's'}`;
     document.getElementById('selectionSummary').textContent = summaryText;
+
 }
 
 function updateHistoryState() {
@@ -160,6 +161,33 @@ function incrementStreak() {
     document.getElementById('streakCount').textContent = streak;
 }
 
+function updateResultTitle() {
+    const variant = document.getElementById('variant').value.replace('_', '/');
+    const modelType = document.getElementById('modelType').value;
+    const mode = document.getElementById('mode').value;
+    const bulkCount = parseInt(document.getElementById('bulkCount').value);
+
+    const modelLabel = modelType === '' ? 'ODE' : 'Hybrid';
+    const modeLabel = formatLabel(mode);
+
+    let title = `AI Suggestions — ${variant} · ${modelLabel} · ${modeLabel}`;
+
+    if (bulkCount > 1) {
+        title += ` · ${bulkCount} picks`;
+    }
+
+    document.getElementById("resultTitle").innerHTML =
+        `<i class="bi bi-trophy-fill me-2"></i>${title}`;
+
+    console.log("updateResultTitle fired");
+console.log({
+  variant: document.getElementById('variant').value,
+  modelType: document.getElementById('modelType').value,
+  mode: document.getElementById('mode').value,
+  bulkCount: document.getElementById('bulkCount').value
+});
+}
+
 async function getSuggestion() {
     const variant = document.getElementById('variant').value;
     const modelType = document.getElementById('modelType').value;
@@ -177,6 +205,7 @@ async function getSuggestion() {
     const resultInfo = document.getElementById('resultInfo');
     const button = document.querySelector('button[onclick="getSuggestion()"]');
 
+    
     // Show loading
     button.disabled = true;
     button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
@@ -188,6 +217,7 @@ async function getSuggestion() {
     errorDiv.style.display = 'none';
     numbersDiv.innerHTML = '';
     bulkNumbersDiv.innerHTML = '';
+    
 
     try {
         if (bulkCount === 1) {
@@ -234,6 +264,7 @@ async function getSuggestion() {
             data.suggested.forEach(num => numbersDiv.appendChild(createNumberBall(num)));
             updateChart(data);
             updateResultExplanation(data, data.suggested, variant, modelType, mode, false);
+            
             incrementStreak();
             showToast('successToast');
             addToHistory(data.suggested, variant, modelType, mode);
@@ -257,6 +288,7 @@ async function getSuggestion() {
             // Display bulk results
             resultDiv.style.display = 'block';
             bulkResult.style.display = 'block';
+            
             suggestions.forEach((nums, index) => {
                 const col = document.createElement('div');
                 col.className = 'col-md-6 col-lg-4';
@@ -284,6 +316,8 @@ async function getSuggestion() {
             // Add bulk to history (as a group)
             addBulkToHistory(suggestions, variant, modelType, mode);
         }
+
+        updateResultTitle();
     } catch (err) {
         console.error('Fetch error:', err);
         errorDiv.style.display = 'block';
@@ -297,7 +331,10 @@ async function getSuggestion() {
         // Reset button
         button.disabled = false;
         button.innerHTML = 'Get Suggestion';
+        
     }
+
+    
 }
 
 function showToast(toastId) {
