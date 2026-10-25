@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body, HTTPException
 from pathlib import Path
 import torch
 import json
@@ -187,38 +187,95 @@ def suggest(variant: str, mode: str = "balance"):
         return {"status": "retry", "message": "AI is temporarily busy/confused. Try again or switch mode."}
 
 
+
 @app.post("/update/{variant}")
-def update_history(variant: str, draws: Union[list[int], list[list[int]]]):
-    """API endpoint to update Bayesian memory and lotto history.
-    
-    Accepts either a single draw [1,2,3,4,5,6] or multiple draws [[1,2,3,4,5,6], [7,8,9,10,11,12]]
-    """
+def update_history(
+    variant: str,
+    draws: Union[list[int], list[list[int]]] = Body(...)
+):
+    """Append one or more validated lottery draws to history."""
+
     data_file = Path("data") / f"lotto_history_{variant}.json"
+
     if not data_file.exists():
-        return {"error": f"No history found for {variant}"}
+        raise HTTPException(
+            status_code=404,
+            detail=f"No history found for variant: {variant}"
+        )
+
+    # Normalize a single draw into a list of draws.
+    if not draws:
+        raise HTTPException(status_code=400, detail="No draws provided.")
+
+    if isinstance(draws[0], list):
+        new_draws = draws
+    else:
+        new_draws = [draws]
 
     with open(data_file, "r") as f:
         history = json.load(f)
 
-    memory = BayesianMemory(variant)
+    if not isinstance(history, list) or not history:
+        raise HTTPException(
+            status_code=400,
+            detail="History is empty or has an invalid format."
+        )
 
-    # Check if single draw or multiple draws
-    if isinstance(draws[0], list):
-        # Multiple draws: list of lists
-        for draw in draws:
-            history.append(draw)
+    # Derive basic constraints from existing history.
+    expected_count = len(history[0])
+    pool_size = max(max(draw) for draw in history)
+
+    added = []
+    skipped = []
+
+    for draw in new_draws:
+        if not isinstance(draw, list) or len(draw) != expected_count:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Each draw must contain {expected_count} numbers."
+            )
+
+        if any(
+            not isinstance(n, int) or isinstance(n, bool)
+            or n < 1 or n > pool_size
+            for n in draw
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Numbers must be integers between 1 and {pool_size}."
+            )
+
+        if len(set(draw)) != len(draw):
+            raise HTTPException(
+                status_code=400,
+                detail="Duplicate numbers within a draw are not allowed."
+            )
+
+        # Sort for consistent comparison/storage.
+        normalized = sorted(draw)
+
+        if normalized in [sorted(old) for old in history + added]:
+            skipped.append(normalized)
+            continue
+
+        added.append(normalized)
+
+    if added:
+        history.extend(added)
+
+        with open(data_file, "w") as f:
+            json.dump(history, f, indent=2)
+
+        memory = BayesianMemory(variant)
+        for draw in added:
             memory.update(draw)
-        num_draws = len(draws)
-    else:
-        # Single draw: list of ints
-        history.append(draws)
-        memory.update(draws)
-        num_draws = 1
 
-    with open(data_file, "w") as f:
-        json.dump(history, f, indent=2)
-
-    return {"status": "ok", "message": f"Updated with {num_draws} draw(s). History and Bayesian memory updated"}
+    return {
+        "status": "ok",
+        "added": len(added),
+        "skipped_duplicates": len(skipped),
+        "message": f"Added {len(added)} draw(s); skipped {len(skipped)} duplicate(s)."
+    }
 
 
 if __name__ == "__main__":
