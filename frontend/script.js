@@ -20,11 +20,13 @@ window.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    // Initialize Bootstrap tooltips only if Bootstrap JS is available.
+    if (window.bootstrap?.Tooltip) {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            .forEach(element => {
+            new window.bootstrap.Tooltip(element);
+            });
+    }
 });
 
 function createPlaceholderBalls() {
@@ -188,13 +190,9 @@ console.log({
 });
 }
 
-async function getSuggestion() {
-    const variant = document.getElementById('variant').value;
-    const modelType = document.getElementById('modelType').value;
-    const mode = document.getElementById('mode').value;
-    const bulkCount = parseInt(document.getElementById('bulkCount').value);
-    const fullVariant = variant + modelType;
 
+async function getSuggestion() {
+    const emptyPreview = document.getElementById('resultEmpty');
     const resultDiv = document.getElementById('result');
     const singleResult = document.getElementById('singleResult');
     const bulkResult = document.getElementById('bulkResult');
@@ -203,145 +201,361 @@ async function getSuggestion() {
     const messageDiv = document.getElementById('message');
     const errorDiv = document.getElementById('error');
     const resultInfo = document.getElementById('resultInfo');
-    const button = document.querySelector('button[onclick="getSuggestion()"]');
 
-    
-    // Show loading
-    button.disabled = true;
-    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+    const button = document.querySelector(
+        'button[onclick="getSuggestion()"]'
+    );
+
+    if (!resultDiv || !numbersDiv || !bulkNumbersDiv) {
+        console.error('Suggestion UI is missing required result elements.');
+        showToast('errorToast', 'The results area could not be found.');
+        return;
+    }
+
+    if (button?.disabled) return;
+
+    const originalButtonContent = button?.innerHTML || 'Generate Suggestion';
+
+    const variant = document.getElementById('variant')?.value;
+    const modelType = document.getElementById('modelType')?.value ?? '';
+    const mode = document.getElementById('mode')?.value;
+    const bulkCount = parseInt(
+        document.getElementById('bulkCount')?.value || '1',
+        10
+    );
+
+    if (!variant || !mode || !Number.isInteger(bulkCount) || bulkCount < 1) {
+        if (errorDiv) {
+            errorDiv.textContent = 'Please select valid lottery settings.';
+            errorDiv.style.display = 'block';
+        }
+        showToast('errorToast', 'Please check your lottery settings.');
+        return;
+    }
+
+    const fullVariant = variant + modelType;
+    let displayedResults = false;
+
+    // Prepare the interface for a new request.
+    if (button) {
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        button.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-2"
+                  role="status" aria-hidden="true"></span>
+            Generating...
+        `;
+    }
+
+    // Show the placeholder while a new suggestion is being generated.
+    if (emptyPreview) {
+        emptyPreview.style.display = '';
+    }
+
     resultDiv.style.display = 'none';
-    singleResult.style.display = 'none';
-    bulkResult.style.display = 'none';
+
+    if (singleResult) singleResult.style.display = 'none';
+    if (bulkResult) bulkResult.style.display = 'none';
     if (resultInfo) resultInfo.style.display = 'none';
-    messageDiv.style.display = 'none';
-    errorDiv.style.display = 'none';
-    numbersDiv.innerHTML = '';
-    bulkNumbersDiv.innerHTML = '';
-    
+    if (messageDiv) messageDiv.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'none';
+
+    numbersDiv.replaceChildren();
+    bulkNumbersDiv.replaceChildren();
+
+    // Check and parse the backend response.
+    async function requestSuggestion() {
+        const response = await fetch(
+            `/suggest/${encodeURIComponent(fullVariant)}/${encodeURIComponent(mode)}`,
+            { method: 'POST' }
+        );
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error(
+                `The server returned an invalid response (HTTP ${response.status}).`
+            );
+        }
+
+        if (!response.ok && !data?.suggested && !data?.error) {
+            throw new Error(
+                `Request failed with HTTP ${response.status} ${response.statusText}.`
+            );
+        }
+
+        if (!data || typeof data !== 'object') {
+            throw new Error('The server returned an empty or invalid response.');
+        }
+
+        return data;
+    }
+
+    function displaySingleSuggestion(data) {
+        if (!Array.isArray(data.suggested) || data.suggested.length === 0) {
+            throw new Error('The server did not return any suggested numbers.');
+        }
+
+        numbersDiv.replaceChildren(
+            ...data.suggested.map(number => createNumberBall(number))
+        );
+
+        resultDiv.style.display = 'block';
+
+        if (singleResult) singleResult.style.display = 'block';
+        if (bulkResult) bulkResult.style.display = 'none';
+
+        // Probability data may be absent; the numbers should still display.
+        if (Array.isArray(data.probabilities) && data.probabilities.length) {
+            try {
+                updateChart(data);
+            } catch (chartError) {
+                console.error('Could not update the probability chart:', chartError);
+            }
+        }
+
+        try {
+            updateResultExplanation(
+                data, data.suggested, variant, modelType, mode, false
+            );
+        } catch (explanationError) {
+            console.error('Could not update result details:', explanationError);
+        }
+
+        displayedResults = true;
+    }
 
     try {
         if (bulkCount === 1) {
-            // Single suggestion
-            const response = await fetch(`/suggest/${fullVariant}/${mode}`, { method: 'POST' });
-            const data = await response.json();
+            // Single suggestion.
+            const data = await requestSuggestion();
 
-            if (data.status === "retry") {
-                messageDiv.style.display = 'block';
-                messageDiv.textContent = data.message;
-                if (data.suggested) {
-                    // Still display and add to history even on retry
-                    resultDiv.style.display = 'block';
-                    singleResult.style.display = 'block';
-                    data.suggested.forEach(num => numbersDiv.appendChild(createNumberBall(num)));
-                    updateChart(data);
+            if (data.status === 'retry') {
+                if (messageDiv) {
+                    messageDiv.textContent =
+                        data.message || 'The model requested a retry.';
+                    messageDiv.style.display = 'block';
+                }
+
+                if (Array.isArray(data.suggested) && data.suggested.length) {
+                    displaySingleSuggestion(data);
+                    if (emptyPreview) emptyPreview.style.display = 'none';
+
                     incrementStreak();
                     addToHistory(data.suggested, variant, modelType, mode);
+                    updateResultTitle();
+                } else {
+                    showToast('errorToast', data.message || 'Please try again.');
                 }
+
                 return;
             }
-            if (data.error) {
-                if (!data.suggested) {
-                    errorDiv.style.display = 'block';
-                    errorDiv.textContent = data.error;
-                    showToast('errorToast');
-                    return;
-                } else {
-                    // Display anyway if suggested provided despite error
-                    resultDiv.style.display = 'block';
-                    singleResult.style.display = 'block';
-                    data.suggested.forEach(num => numbersDiv.appendChild(createNumberBall(num)));
 
-                    updateChart(data);
-                    incrementStreak();
-                    addToHistory(data.suggested, variant, modelType, mode);
-                    return;
-                }
+            if (data.error && !Array.isArray(data.suggested)) {
+                throw new Error(data.error);
             }
 
-            // Success case
-            resultDiv.style.display = 'block';
-            singleResult.style.display = 'block';
-            data.suggested.forEach(num => numbersDiv.appendChild(createNumberBall(num)));
-            updateChart(data);
-            updateResultExplanation(data, data.suggested, variant, modelType, mode, false);
-            
+            if (data.error && !data.suggested?.length) {
+                throw new Error(data.error);
+            }
+
+            displaySingleSuggestion(data);
+
+            if (emptyPreview) emptyPreview.style.display = 'none';
+
             incrementStreak();
-            showToast('successToast');
             addToHistory(data.suggested, variant, modelType, mode);
+            updateResultTitle();
+
+            showToast(
+                data.error ? 'errorToast' : 'successToast',
+                data.error
+                    ? 'Numbers were returned, but the server reported a warning.'
+                    : 'Your suggestion has been generated.'
+            );
+
         } else {
-            // Bulk suggestions
+            // Bulk suggestions.
             const suggestions = [];
             let lastProbabilities = [];
+
             for (let i = 0; i < bulkCount; i++) {
-                const response = await fetch(`/suggest/${fullVariant}/${mode}`, { method: 'POST' });
-                const data = await response.json();
-                if (data.error && !data.suggested) {
-                    errorDiv.style.display = 'block';
-                    errorDiv.textContent = `Error on suggestion ${i+1}: ${data.error}`;
-                    showToast('errorToast');
-                    return;
+                const data = await requestSuggestion();
+
+                if (data.error && !data.suggested?.length) {
+                    throw new Error(
+                        `Suggestion ${i + 1}: ${data.error}`
+                    );
                 }
-                suggestions.push(data.suggested || []);
-                lastProbabilities = data.probabilities || lastProbabilities;
+
+                if (!Array.isArray(data.suggested) || !data.suggested.length) {
+                    throw new Error(
+                        `Suggestion ${i + 1} did not contain any numbers.`
+                    );
+                }
+
+                suggestions.push(data.suggested);
+
+                if (
+                    Array.isArray(data.probabilities) &&
+                    data.probabilities.length
+                ) {
+                    lastProbabilities = data.probabilities;
+                }
             }
 
-            // Display bulk results
-            resultDiv.style.display = 'block';
-            bulkResult.style.display = 'block';
-            
+            // Build the bulk result cards.
             suggestions.forEach((nums, index) => {
                 const col = document.createElement('div');
                 col.className = 'col-md-6 col-lg-4';
-                col.innerHTML = `
-                    <div class="card p-3 mb-3">
-                        <h6 class="text-center">Suggestion ${index + 1}</h6>
-                        <div class="d-flex flex-wrap justify-content-center gap-1">
-                            ${nums.map(num => `<div class="number-ball">${num}</div>`).join('')}
-                        </div>
-                    </div>
-                `;
+
+                const card = document.createElement('div');
+                card.className = 'card p-3 mb-3';
+
+                const heading = document.createElement('h6');
+                heading.className = 'text-center';
+                heading.textContent = `Suggestion ${index + 1}`;
+
+                const ballContainer = document.createElement('div');
+                ballContainer.className =
+                    'd-flex flex-wrap justify-content-center gap-1';
+
+                nums.forEach(number => {
+                    ballContainer.appendChild(createNumberBall(number));
+                });
+
+                card.append(heading, ballContainer);
+                col.appendChild(card);
                 bulkNumbersDiv.appendChild(col);
             });
+
+            resultDiv.style.display = 'block';
+
+            if (bulkResult) bulkResult.style.display = 'block';
+            if (singleResult) singleResult.style.display = 'none';
+
+            if (emptyPreview) emptyPreview.style.display = 'none';
+
             if (lastProbabilities.length) {
-                updateChart({ probabilities: lastProbabilities, suggested: suggestions[0] || [] });
+                try {
+                    updateChart({
+                        probabilities: lastProbabilities,
+                        suggested: suggestions[0]
+                    });
+                } catch (chartError) {
+                    console.error('Could not update the probability chart:', chartError);
+                }
             }
-            updateResultExplanation({ probabilities: lastProbabilities }, suggestions[0] || [], variant, modelType, mode, true, suggestions.length);
 
-            // Increment streak for bulk
+            try {
+                updateResultExplanation(
+                    { probabilities: lastProbabilities },
+                    suggestions[0],
+                    variant,
+                    modelType,
+                    mode,
+                    true,
+                    suggestions.length
+                );
+            } catch (explanationError) {
+                console.error('Could not update result details:', explanationError);
+            }
+
             incrementStreak();
-
-            // Show success toast
-            showToast('successToast');
-
-            // Add bulk to history (as a group)
             addBulkToHistory(suggestions, variant, modelType, mode);
+            updateResultTitle();
+
+            displayedResults = true;
+            showToast('successToast', `${suggestions.length} suggestions generated.`);
         }
 
-        updateResultTitle();
     } catch (err) {
-        console.error('Fetch error:', err);
-        errorDiv.style.display = 'block';
-        if (err.name === 'TypeError' && err.message.includes('fetch')) {
-            errorDiv.textContent = 'Network error: Unable to connect to the API. Is the backend server running?';
-        } else {
-            errorDiv.textContent = `Failed to fetch suggestion: ${err.message}`;
+        console.error('Suggestion generation failed:', err);
+
+        if (!displayedResults) {
+            resultDiv.style.display = 'none';
+
+            if (emptyPreview) emptyPreview.style.display = '';
+
+            if (errorDiv) {
+                errorDiv.textContent =
+                    err instanceof TypeError
+                        ? 'Unable to connect to the API. Check your backend server and network connection.'
+                        : (err.message || 'An unexpected error occurred.');
+
+                errorDiv.style.display = 'block';
+            }
         }
-        showToast('errorToast');
+
+        showToast(
+            'errorToast',
+            err.message || 'Failed to generate suggestions.'
+        );
+
     } finally {
-        // Reset button
-        button.disabled = false;
-        button.innerHTML = 'Get Suggestion';
-        
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.innerHTML = originalButtonContent;
+        }
+    }
+}
+
+
+
+
+function showToast(type, message) {
+    // Accept both existing calls:
+    // showToast('successToast')
+    // showToast('errorToast')
+    // and semantic calls:
+    // showToast('success', 'Generated successfully!')
+    // showToast('error', 'Something went wrong.')
+
+    const isSuccess =
+        type === 'success' || type === 'successToast';
+
+    const toastId = isSuccess ? 'successToast' : 'errorToast';
+    const toast = document.getElementById(toastId);
+
+    if (!toast) {
+        console[isSuccess ? 'log' : 'error'](
+            message || (isSuccess ? 'Success' : 'Error')
+        );
+        return;
     }
 
-    
+    if (message) {
+        // Preserve any icons or markup inside the toast.
+        const messageElement = toast.querySelector(
+            '.toast-body, [data-toast-message]'
+        );
+
+        if (messageElement) {
+            messageElement.textContent = message;
+        } else {
+            toast.textContent = message;
+        }
+    }
+
+    document.querySelectorAll('.toast').forEach(item => {
+        item.classList.remove('show');
+    });
+
+    toast.classList.add('show');
+
+    if (toast._dismissTimer) {
+        clearTimeout(toast._dismissTimer);
+    }
+
+    toast._dismissTimer = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3500);
 }
 
-function showToast(toastId) {
-    const toastElement = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastElement);
-    toast.show();
-}
+
 
 function updateChart(data) {
     const ctx = document.getElementById('probChart').getContext('2d');
